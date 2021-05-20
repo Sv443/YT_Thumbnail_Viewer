@@ -1,0 +1,19 @@
+{
+  "name": "yt_thumbnail_viewer",
+  "version": "0.1.0",
+  "description": "Adds a link to the video description to open the video's thumbnail",
+  "main": "yt_thumbnail_viewer.user.js",
+  "scripts": {
+    "test": "echo \"Error: no test specified\" && exit 1"
+  },
+  "repository": {
+    "type": "git",
+    "url": "git+https://github.com/Sv443/YT_Thumbnail_Viewer.git"
+  },
+  "author": "Sv443",
+  "license": "MIT",
+  "bugs": {
+    "url": "https://github.com/Sv443/YT_Thumbnail_Viewer/issues"
+  },
+  "homepage": "https://github.com/Sv443/YT_Thumbnail_Viewer#readme"
+}
