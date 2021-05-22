@@ -7,12 +7,14 @@
 // @author       Sv443
 // @copyright    2021, Sv443 (https://github.com/Sv443)
 // @match        https://www.youtube.com/watch*
+// @match        https://youtube.com/watch*
 // @icon         https://www.google.com/s2/favicons?domain=youtube.com
 // @run-at       document-end
 // @downloadURL  https://raw.githubusercontent.com/Sv443/YT_Thumbnail_Viewer/main/yt_thumbnail_viewer.user.js
 // @updateURL    https://raw.githubusercontent.com/Sv443/YT_Thumbnail_Viewer/main/yt_thumbnail_viewer.user.js
 // ==/UserScript==
 
+//#SECTION typedefs
 
 /**
  * @typedef {object} ThumbnailObj
@@ -24,21 +26,28 @@
 
 "use strict";
 
+//#SECTION main function
 
-(function() {
+const YTTV = function() {
 
     // TODO: ´run reRender() when video is changed (since it doesn't cause a page reload)
     // Maybe try observing `#movie_player video.video-stream` for change of `src` attribute?
 
+    unused(reRender);
 
-    const settings = {
+
+    /**
+     * Settings obviously, what did you think?
+     * @readonly (Readonly objects cannot be modified at runtime)
+     */
+    const settings = Object.freeze({
         /** Max length of file names */
         fileNameMaxLength: 64,
         /** Whitelist of characters that are allowed in file names. All other characters will be replaced by the `fileNameReplaceChar` */
         fileNameReplaceRegex: /[^a-zA-Z0-9_\-+#'(){}[\]$%=\s]/g,
         /** What to replace matches of the `fileNameReplaceRegex` regex with */
         fileNameReplaceChar: "_"
-    };
+    });
 
     /**
      * Contains info about this script
@@ -140,15 +149,20 @@
         document.dispatchEvent(new Event("yttv_done"));
     }
 
+    /**
+     * Re-renders the DOM elements. Run this if the user switched to a different video.
+     */
     function reRender()
     {
         console.info(`Video switched, re-rendering thumbnail viewer elements`);
 
         const cont = document.querySelector("#yttv_container");
 
+        // remove container if it exists
         if(cont)
             cont.parentElement.removeChild(cont);
 
+        // add elements again
         addElements();
     }
 
@@ -226,4 +240,18 @@
             return [];
         }
     }
-})();
+
+    /**
+     * Annotates one or more unused variable(s)
+     * @param  {...any} any
+     * @returns {void} Always returns void (undefined)
+     */
+    function unused(...any)
+    {
+        // do nothing
+        void any;
+    }
+};
+
+// run YTTV script
+YTTV();
