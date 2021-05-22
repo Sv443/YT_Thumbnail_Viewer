@@ -144,7 +144,7 @@ const YTTV = function() {
         return new Promise(async (res) => {
             const iconLinkElem = document.createElement("a");
             iconLinkElem.id = "yttv_icon_link";
-            iconLinkElem.href = yttv_info.repo;
+            iconLinkElem.href = `${yttv_info.repo}#readme`;
             iconLinkElem.target = "_blank";
             iconLinkElem.style = "text-decoration: none;";
 
