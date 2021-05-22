@@ -198,6 +198,7 @@ const YTTV = function() {
         // NOTE: using MutationObserver didn't work out, it seems to get detached if the video is switched
 
         // maybe try intercepting history.pushState() ???? I'm kinda out of other ideas tbh
+        // also an idea (but a bad one) would be scan URL on interval and use the video ID (after `/watch?v=`) to compare
 
         unused(reRender);
     }
