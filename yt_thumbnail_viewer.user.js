@@ -8,7 +8,7 @@
 // @copyright    2021, Sv443 (https://github.com/Sv443)
 // @match        https://www.youtube.com/watch*
 // @match        https://youtube.com/watch*
-// @icon         https://www.google.com/s2/favicons?domain=youtube.com
+// @icon         https://raw.githubusercontent.com/Sv443/YT_Thumbnail_Viewer/main/icon/icon_square.png
 // @run-at       document-end
 // @downloadURL  https://raw.githubusercontent.com/Sv443/YT_Thumbnail_Viewer/main/yt_thumbnail_viewer.user.js
 // @updateURL    https://raw.githubusercontent.com/Sv443/YT_Thumbnail_Viewer/main/yt_thumbnail_viewer.user.js
@@ -88,6 +88,7 @@ const YTTV = function() {
 
         const yttvContainer = document.createElement("div");
         yttvContainer.id = "yttv_container";
+        yttvContainer.className = "content style-scope ytd-video-secondary-info-renderer";
         yttvContainer.style = "display: block; margin-top: 40px;";
 
         const containerElements = await getContainerContent(thumbHighestRes);
@@ -134,34 +135,52 @@ const YTTV = function() {
     }
 
     /**
-     * Returns a list of HTMLElements that should be appended as the YTTV container's children
+     * Returns a list of HTMLElements that should be appended as the YTTV DOM container's children
      * @param {ThumbnailObj} thumbHighestRes 
      * @returns {Promise<HTMLElement[]>}
      */
     function getContainerContent(thumbHighestRes)
     {
         return new Promise(async (res) => {
+            const iconLinkElem = document.createElement("a");
+            iconLinkElem.id = "yttv_icon_link";
+            iconLinkElem.href = yttv_info.repo;
+            iconLinkElem.target = "_blank";
+            iconLinkElem.style = "text-decoration: none;";
+
+            const iconElem = document.createElement("img");
+            iconElem.id = "yttv_icon";
+            iconElem.src = "https://raw.githubusercontent.com/Sv443/YT_Thumbnail_Viewer/main/icon/icon_tiny.png";
+            iconElem.style = "display: inline; height: 1em; cursor: pointer; margin-right: 8px;";
+
+            iconLinkElem.appendChild(iconElem);
+
             const infoElem = document.createElement("span");
             infoElem.id = "yttv_info_text";
-            infoElem.innerText = `Video Thumbnail: `;
+            infoElem.innerText = "Video Thumbnail: ";
+            infoElem.className = "style-scope yt-formatted-string";
 
             const openElem = document.createElement("a");
             openElem.id = "yttv_thumbnail_link";
             openElem.innerText = `Open`;
             openElem.target = "_blank";
             openElem.href = thumbHighestRes.url;
+            openElem.className = "yt-simple-endpoint style-scope yt-formatted-string";
 
             const bullElem = document.createElement("span");
             bullElem.innerText = " • ";
+            bullElem.className = "style-scope yt-formatted-string";
 
             const downloadElem = document.createElement("a");
             downloadElem.id = "yttv_thumbnail_download";
             downloadElem.innerText = "Download";
             downloadElem.href = await toDataURL(thumbHighestRes.url);
             downloadElem.download = getDownloadName();
+            downloadElem.className = "yt-simple-endpoint style-scope yt-formatted-string";
 
             // IMPORTANT: The order of this array is what decides the order of elements in the DOM so be careful here:
             return res([
+                iconLinkElem,
                 infoElem,
                 openElem,
                 bullElem,
