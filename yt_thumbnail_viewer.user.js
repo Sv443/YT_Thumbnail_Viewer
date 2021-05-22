@@ -8,7 +8,7 @@
 // @copyright    2021, Sv443 (https://github.com/Sv443)
 // @match        https://www.youtube.com/watch*
 // @icon         https://www.google.com/s2/favicons?domain=youtube.com
-// @run-at       document-start
+// @run-at       document-end
 // @downloadURL  https://raw.githubusercontent.com/Sv443/YT_Thumbnail_Viewer/main/yt_thumbnail_viewer.user.js
 // @updateURL    https://raw.githubusercontent.com/Sv443/YT_Thumbnail_Viewer/main/yt_thumbnail_viewer.user.js
 // ==/UserScript==
@@ -26,16 +26,18 @@
 
 
 (function() {
-    document.addEventListener("DOMContentLoaded", addLink);
-    window.addEventListener("popstate", reRender);
 
-    // TODO: re-render doesn't work
+    // TODO: ´run reRender() when video is changed (since it doesn't cause a page reload)
     // Maybe try observing `#movie_player video.video-stream` for change of `src` attribute?
 
 
     const settings = {
-        titleMaxLength: 64,
-        fileNameReplaceRegex: /[^a-zA-Z0-9_\-+#'(){}[\]$%=\s]/g
+        /** Max length of file names */
+        fileNameMaxLength: 64,
+        /** Whitelist of characters that are allowed in file names. All other characters will be replaced by the `fileNameReplaceChar` */
+        fileNameReplaceRegex: /[^a-zA-Z0-9_\-+#'(){}[\]$%=\s]/g,
+        /** What to replace matches of the `fileNameReplaceRegex` regex with */
+        fileNameReplaceChar: "_"
     };
 
     /**
@@ -52,11 +54,16 @@
         repo: GM.info.script.namespace,   // eslint-disable-line no-undef
     };
 
+    // call entrypoint function of the userscript, this adds all elements to the DOM
+    addElements();
+
+
+    //#SECTION entrypoint
 
     /**
      * Run to grab the thumbnail link and add a link to the video description
      */
-    async function addLink()
+    async function addElements()
     {
         const thumbs = getThumbnails();
 
@@ -94,7 +101,7 @@
         downloadElem.id = "yttv_thumbnail_download";
         downloadElem.innerText = "Download";
         downloadElem.href = await toDataURL(thumbHighestRes.url);
-        downloadElem.download = getDownloadName(thumbResString);
+        downloadElem.download = getDownloadName();
 
 
         //#SECTION attach elements
@@ -110,10 +117,11 @@
 
         // use MutationObserver to scan for mutations in the DOM, to add the thumbnail links only when the video description element exists
         const observer = new MutationObserver((mutations, mo) => {
-            const descriptionElem = document.querySelector("#content > #description");
+            const descriptionElem = getDescription();
 
             if(descriptionElem)
             {
+                // attach container to video description element, then disconnect this MutationObserver
                 descriptionElem.appendChild(yttvContainer);
                 mo.disconnect();
             }
@@ -141,35 +149,55 @@
         if(cont)
             cont.parentElement.removeChild(cont);
 
-        addLink();
+        addElements();
     }
 
     /**
-     * Convert a URL to a data URL
-     * @param {string} url 
-     * @returns {string}
+     * Fetches an image from a URL and converts it to a data URL
+     * @param {string} url
+     * @returns {Promise<string>}
      */
-    async function toDataURL(url)
+    function toDataURL(url)
     {
-        const fetched = await fetch(url);
-        const blob = await fetched.blob();
-        const objUrl = URL.createObjectURL(blob);
+        return new Promise(async (res) => {
+            const fetched = await fetch(url);
+            const blob = await fetched.blob();
+            const objUrl = URL.createObjectURL(blob);
 
-        return objUrl;
+            return res(objUrl);
+        });
+    }
+
+    /**
+     * Queries the DOM for the video description element
+     * @returns {HTMLElement|null} Returns `null` if the description is not present
+     */
+    function getDescription()
+    {
+        return document.querySelector("#content > #description");
     }
 
     /**
      * Returns the download name of the thumbnail
-     * @param {string} thumbResString Thumbnail's resolution as a string
      * @returns {string}
      */
-    function getDownloadName(thumbResString)
+    function getDownloadName()
     {
         const title = ytInitialPlayerResponse.videoDetails.title; // eslint-disable-line no-undef
 
-        const thumbName = (title.length > settings.titleMaxLength ? title.substr(0, settings.titleMaxLength) : title);
+        const thumbName = (title.length > settings.fileNameMaxLength ? title.substr(0, settings.fileNameMaxLength) : title);
 
-        return `${thumbName.replace(settings.fileNameReplaceRegex, "_") || "thumbnail"}_${thumbResString}`;
+        return sanitizeFileName(thumbName || "thumbnail");
+    }
+
+    /**
+     * Sanitizes a file name (replaces invalid characters)
+     * @param {string} fileName
+     * @returns {string}
+     */
+    function sanitizeFileName(fileName)
+    {
+        return fileName.replace(settings.fileNameReplaceRegex, settings.fileNameReplaceChar);
     }
 
     /**
