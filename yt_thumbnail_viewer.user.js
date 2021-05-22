@@ -14,7 +14,7 @@
 // @updateURL    https://raw.githubusercontent.com/Sv443/YT_Thumbnail_Viewer/main/yt_thumbnail_viewer.user.js
 // ==/UserScript==
 
-//#SECTION typedefs
+//#MARKER typedefs
 
 /**
  * @typedef {object} ThumbnailObj
@@ -23,45 +23,43 @@
  * @prop {number} height
  */
 
+//#MARKER settings
 
 "use strict";
 
-//#SECTION main function
+/**
+ * Settings obviously, what did you think?
+ * @readonly (Readonly objects cannot be modified at runtime)
+ */
+const yttv_settings = Object.freeze({
+    /** Max length of file names */
+    fileNameMaxLength: 64,
+    /** Whitelist of characters that are allowed in file names. All other characters will be replaced by the `fileNameReplaceChar` */
+    fileNameReplaceRegex: /[^a-zA-Z0-9_\-+#'(){}[\]$%=\s]/g,
+    /** What to replace matches of the `fileNameReplaceRegex` regex with */
+    fileNameReplaceChar: "_"
+});
+
+/**
+ * Contains info about this script
+ */
+const yttv_info = {
+    /** @type {string} */
+    name: GM.info.script.name,        // eslint-disable-line no-undef
+    /** @type {string} */
+    version: GM.info.script.version,  // eslint-disable-line no-undef
+    /** @type {string} */
+    desc: GM.info.script.description, // eslint-disable-line no-undef
+    /** @type {string} */
+    repo: GM.info.script.namespace,   // eslint-disable-line no-undef
+};
+
+//#MARKER main function
 
 const YTTV = function() {
 
-    // TODO: ´run reRender() when video is changed (since it doesn't cause a page reload)
-    // Maybe try observing `#movie_player video.video-stream` for change of `src` attribute?
-
-    unused(reRender);
-
-
-    /**
-     * Settings obviously, what did you think?
-     * @readonly (Readonly objects cannot be modified at runtime)
-     */
-    const settings = Object.freeze({
-        /** Max length of file names */
-        fileNameMaxLength: 64,
-        /** Whitelist of characters that are allowed in file names. All other characters will be replaced by the `fileNameReplaceChar` */
-        fileNameReplaceRegex: /[^a-zA-Z0-9_\-+#'(){}[\]$%=\s]/g,
-        /** What to replace matches of the `fileNameReplaceRegex` regex with */
-        fileNameReplaceChar: "_"
-    });
-
-    /**
-     * Contains info about this script
-     */
-    const info = {
-        /** @type {string} */
-        name: GM.info.script.name,        // eslint-disable-line no-undef
-        /** @type {string} */
-        version: GM.info.script.version,  // eslint-disable-line no-undef
-        /** @type {string} */
-        desc: GM.info.script.description, // eslint-disable-line no-undef
-        /** @type {string} */
-        repo: GM.info.script.namespace,   // eslint-disable-line no-undef
-    };
+    // hook into events to call `reRender()` when needed
+    hookReRender();
 
     // call entrypoint function of the userscript, this adds all elements to the DOM
     addElements();
@@ -72,7 +70,7 @@ const YTTV = function() {
     /**
      * Run to grab the thumbnail link and add a link to the video description
      */
-    function addElements()
+    async function addElements()
     {
         //#SECTION grab thumbnails
 
@@ -80,7 +78,7 @@ const YTTV = function() {
 
         if(thumbs.length === 0)
         {
-            console.error(`${info.name} - Couldn't find any thumbnails associated with this video (or I wrote some broken code which is also possible)`);
+            console.error(`${yttv_info.name} - Couldn't find any thumbnails associated with this video (or I wrote some broken code which is also possible)`);
             return;
         }
 
@@ -92,7 +90,7 @@ const YTTV = function() {
         yttvContainer.id = "yttv_container";
         yttvContainer.style = "display: block; margin-top: 40px;";
 
-        const containerElements = getContainerContent(thumbHighestRes);
+        const containerElements = await getContainerContent(thumbHighestRes);
 
         //#SECTION attach elements
 
@@ -101,7 +99,7 @@ const YTTV = function() {
 
         attachContainer(yttvContainer);
 
-        console.info(`Added thumbnail links to description (${info.name} v${info.version} - ${info.repo})`);
+        console.info(`Added thumbnail links to description (${yttv_info.name} v${yttv_info.version} - ${yttv_info.repo})`);
 
         document.dispatchEvent(new Event("yttv_done"));
     }
@@ -113,7 +111,7 @@ const YTTV = function() {
     function attachContainer(yttvContainer)
     {
         // use MutationObserver to scan for mutations in the DOM, to add the thumbnail links only when the video description element exists
-        const observer = new MutationObserver((mutations, mo) => {
+        const observer = new MutationObserver((mutations, obs) => {
             unused(mutations);
 
             const descriptionElem = getDescription();
@@ -122,7 +120,7 @@ const YTTV = function() {
             {
                 // attach container to video description element, then disconnect this MutationObserver
                 descriptionElem.appendChild(yttvContainer);
-                mo.disconnect();
+                obs.disconnect();
             }
         });
 
@@ -138,36 +136,51 @@ const YTTV = function() {
     /**
      * Returns a list of HTMLElements that should be appended as the YTTV container's children
      * @param {ThumbnailObj} thumbHighestRes 
-     * @returns {HTMLElement[]}
+     * @returns {Promise<HTMLElement[]>}
      */
-    async function getContainerContent(thumbHighestRes)
+    function getContainerContent(thumbHighestRes)
     {
-        const infoElem = document.createElement("span");
-        infoElem.id = "yttv_info_text";
-        infoElem.innerText = `Video Thumbnail: `;
+        return new Promise(async (res) => {
+            const infoElem = document.createElement("span");
+            infoElem.id = "yttv_info_text";
+            infoElem.innerText = `Video Thumbnail: `;
 
-        const openElem = document.createElement("a");
-        openElem.id = "yttv_thumbnail_link";
-        openElem.innerText = `Open`;
-        openElem.target = "_blank";
-        openElem.href = thumbHighestRes.url;
+            const openElem = document.createElement("a");
+            openElem.id = "yttv_thumbnail_link";
+            openElem.innerText = `Open`;
+            openElem.target = "_blank";
+            openElem.href = thumbHighestRes.url;
 
-        const bullElem = document.createElement("span");
-        bullElem.innerText = " • ";
+            const bullElem = document.createElement("span");
+            bullElem.innerText = " • ";
 
-        const downloadElem = document.createElement("a");
-        downloadElem.id = "yttv_thumbnail_download";
-        downloadElem.innerText = "Download";
-        downloadElem.href = await toDataURL(thumbHighestRes.url);
-        downloadElem.download = getDownloadName();
+            const downloadElem = document.createElement("a");
+            downloadElem.id = "yttv_thumbnail_download";
+            downloadElem.innerText = "Download";
+            downloadElem.href = await toDataURL(thumbHighestRes.url);
+            downloadElem.download = getDownloadName();
 
-        // IMPORTANT: The order of this array is what decides the order of elements in the DOM so be careful here:
-        return [
-            infoElem,
-            openElem,
-            bullElem,
-            downloadElem,
-        ];
+            // IMPORTANT: The order of this array is what decides the order of elements in the DOM so be careful here:
+            return res([
+                infoElem,
+                openElem,
+                bullElem,
+                downloadElem,
+            ]);
+        });
+    }
+
+    /**
+     * Hooks into certain events and calls `reRender()` when it's needed (user switched video, etc.)
+     */
+    function hookReRender()
+    {
+        // TODO: ´run reRender() when video is changed (since it doesn't cause a page reload)
+        // NOTE: using MutationObserver didn't work out, it seems to get detached if the video is switched
+
+        // maybe try intercepting history.pushState() ???? I'm kinda out of other ideas tbh
+
+        unused(reRender);
     }
 
     /**
@@ -180,6 +193,7 @@ const YTTV = function() {
         const cont = document.querySelector("#yttv_container");
 
         // remove container if it exists
+        // FIXME: doesn't work yet
         if(cont)
             cont.parentElement.removeChild(cont);
 
@@ -220,7 +234,7 @@ const YTTV = function() {
     {
         const title = ytInitialPlayerResponse.videoDetails.title; // eslint-disable-line no-undef
 
-        const thumbName = (title.length > settings.fileNameMaxLength ? title.substr(0, settings.fileNameMaxLength) : title);
+        const thumbName = (title.length > yttv_settings.fileNameMaxLength ? title.substr(0, yttv_settings.fileNameMaxLength) : title);
 
         return sanitizeFileName(thumbName || "thumbnail");
     }
@@ -232,7 +246,7 @@ const YTTV = function() {
      */
     function sanitizeFileName(fileName)
     {
-        return fileName.replace(settings.fileNameReplaceRegex, settings.fileNameReplaceChar);
+        return fileName.replace(yttv_settings.fileNameReplaceRegex, yttv_settings.fileNameReplaceChar);
     }
 
     // /**
