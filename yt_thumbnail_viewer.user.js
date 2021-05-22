@@ -72,8 +72,10 @@ const YTTV = function() {
     /**
      * Run to grab the thumbnail link and add a link to the video description
      */
-    async function addElements()
+    function addElements()
     {
+        //#SECTION grab thumbnails
+
         const thumbs = getThumbnails();
 
         if(thumbs.length === 0)
@@ -84,15 +86,62 @@ const YTTV = function() {
 
         const thumbHighestRes = thumbs.sort((a, b) => ((a.width + a.height) < (b.width + b.height)))[0];
 
-        const thumbResString = getThumbResString(thumbHighestRes);
-
-
         //#SECTION create elements
 
         const yttvContainer = document.createElement("div");
         yttvContainer.id = "yttv_container";
         yttvContainer.style = "display: block; margin-top: 40px;";
 
+        const containerElements = getContainerContent(thumbHighestRes);
+
+        //#SECTION attach elements
+
+        // append elements onto container as children
+        containerElements.forEach(el => yttvContainer.appendChild(el));
+
+        attachContainer(yttvContainer);
+
+        console.info(`Added thumbnail links to description (${info.name} v${info.version} - ${info.repo})`);
+
+        document.dispatchEvent(new Event("yttv_done"));
+    }
+
+    /**
+     * Attaches the YTTV container element to the video description element
+     * @param {HTMLElement} yttvContainer
+     */
+    function attachContainer(yttvContainer)
+    {
+        // use MutationObserver to scan for mutations in the DOM, to add the thumbnail links only when the video description element exists
+        const observer = new MutationObserver((mutations, mo) => {
+            unused(mutations);
+
+            const descriptionElem = getDescription();
+
+            if(descriptionElem)
+            {
+                // attach container to video description element, then disconnect this MutationObserver
+                descriptionElem.appendChild(yttvContainer);
+                mo.disconnect();
+            }
+        });
+
+        // triple redundancy because YT performance is already bullshit, no need to make it worse
+        const observeElem = document.querySelector("#primary-inner #meta-contents ytd-expander") || document.querySelector("#primary-inner #meta-contents") || document.querySelector("ytd-app") || document.body;
+
+        observer.observe(observeElem, {
+            childList: true,
+            subtree: true
+        });
+    }
+
+    /**
+     * Returns a list of HTMLElements that should be appended as the YTTV container's children
+     * @param {ThumbnailObj} thumbHighestRes 
+     * @returns {HTMLElement[]}
+     */
+    async function getContainerContent(thumbHighestRes)
+    {
         const infoElem = document.createElement("span");
         infoElem.id = "yttv_info_text";
         infoElem.innerText = `Video Thumbnail: `;
@@ -112,41 +161,13 @@ const YTTV = function() {
         downloadElem.href = await toDataURL(thumbHighestRes.url);
         downloadElem.download = getDownloadName();
 
-
-        //#SECTION attach elements
-
-        // concat elements into container
-        [
+        // IMPORTANT: The order of this array is what decides the order of elements in the DOM so be careful here:
+        return [
             infoElem,
             openElem,
             bullElem,
             downloadElem,
-        ]
-        .forEach(el => yttvContainer.appendChild(el));
-
-        // use MutationObserver to scan for mutations in the DOM, to add the thumbnail links only when the video description element exists
-        const observer = new MutationObserver((mutations, mo) => {
-            const descriptionElem = getDescription();
-
-            if(descriptionElem)
-            {
-                // attach container to video description element, then disconnect this MutationObserver
-                descriptionElem.appendChild(yttvContainer);
-                mo.disconnect();
-            }
-        });
-
-        // triple redundancy because YT performance is already bullshit, no need to make it worse
-        const observeElem = document.querySelector("#primary-inner #meta-contents ytd-expander") || document.querySelector("#primary-inner #meta-contents") || document.querySelector("ytd-app") || document.body;
-
-        observer.observe(observeElem, {
-            childList: true,
-            subtree: true
-        });
-
-        console.info(`Added ${thumbResString} thumbnail links to description (${info.name} v${info.version} - ${info.repo})`);
-
-        document.dispatchEvent(new Event("yttv_done"));
+        ];
     }
 
     /**
@@ -214,15 +235,15 @@ const YTTV = function() {
         return fileName.replace(settings.fileNameReplaceRegex, settings.fileNameReplaceChar);
     }
 
-    /**
-     * Turns a thumbnail object into a string in the format `WIDTHxHEIGHT`
-     * @param {ThumbnailObj} thumbnail
-     * @returns {string}
-     */
-    function getThumbResString(thumbnail)
-    {
-        return `${thumbnail.width}x${thumbnail.height}`;
-    }
+    // /**
+    //  * Turns a thumbnail object into a string in the format `WIDTHxHEIGHT`
+    //  * @param {ThumbnailObj} thumbnail
+    //  * @returns {string}
+    //  */
+    // function getThumbResString(thumbnail)
+    // {
+    //     return `${thumbnail.width}x${thumbnail.height}`;
+    // }
 
     /**
      * Returns all thumbnail versions that are available on this video.  
