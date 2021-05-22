@@ -79,7 +79,7 @@
 
         const infoElem = document.createElement("span");
         infoElem.id = "yttv_info_text";
-        infoElem.innerText = `Video Thumbnail [${thumbResString}]: `;
+        infoElem.innerText = `Video Thumbnail: `;
 
         const openElem = document.createElement("a");
         openElem.id = "yttv_thumbnail_link";
