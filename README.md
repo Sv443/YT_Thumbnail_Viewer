@@ -1,4 +1,4 @@
-# YT Thumbnail Viewer (YTTV)
+# YouTube Thumbnail Viewer (YTTV)
 Userscript that allows you to view (and copy / download) a YouTube video's thumbnail easily from within its description
 
 <br><br>
