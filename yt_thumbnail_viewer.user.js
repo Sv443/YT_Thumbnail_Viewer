@@ -32,27 +32,28 @@
  * @readonly (Readonly objects cannot be modified at runtime)
  */
 const yttv_settings = Object.freeze({
-    /** Max length of file names */
+    /** @type {number} Max length of file names */
     fileNameMaxLength: 64,
-    /** Whitelist of characters that are allowed in file names. All other characters will be replaced by the `fileNameReplaceChar` */
+    /** @type {RegExp} Whitelist of characters that are allowed in file names. All other characters will be replaced by the `fileNameReplaceChar` */
     fileNameReplaceRegex: /[^a-zA-Z0-9_\-+#'(){}[\]$%=\s]/g,
-    /** What to replace matches of the `fileNameReplaceRegex` regex with */
+    /** @type {string} What to replace matches of the `fileNameReplaceRegex` regex with */
     fileNameReplaceChar: "_"
 });
 
 /**
- * Contains info about this script
+ * Contains info about this script, set through the `UserScript` header at the top
+ * @readonly (Readonly objects cannot be modified at runtime)
  */
-const yttv_info = {
-    /** @type {string} */
-    name: GM.info.script.name,        // eslint-disable-line no-undef
-    /** @type {string} */
-    version: GM.info.script.version,  // eslint-disable-line no-undef
-    /** @type {string} */
-    desc: GM.info.script.description, // eslint-disable-line no-undef
-    /** @type {string} */
-    repo: GM.info.script.namespace,   // eslint-disable-line no-undef
-};
+const yttv_info = Object.freeze({
+    /** @type {string} The name of the userscript */
+    name: GM.info.script.name,                                      // eslint-disable-line no-undef
+    /** @type {string} The version of the userscript */
+    version: GM.info.script.version,                                // eslint-disable-line no-undef
+    /** @type {string} The description of the userscript */
+    desc: GM.info.script.description,                               // eslint-disable-line no-undef
+    /** @type {string} The URL to the userscript's repository */
+    repo: GM.info.script.namespace,                                 // eslint-disable-line no-undef
+});
 
 //#MARKER main function
 
