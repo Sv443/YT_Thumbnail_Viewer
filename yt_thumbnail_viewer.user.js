@@ -175,7 +175,7 @@ const YTTV = function() {
             const downloadElem = document.createElement("a");
             downloadElem.id = "yttv_thumbnail_download";
             downloadElem.innerText = "Download";
-            downloadElem.href = await toDataURL(thumbHighestRes.url);
+            downloadElem.href = await toBlobURL(thumbHighestRes.url);
             downloadElem.download = getDownloadName();
             downloadElem.className = "yt-simple-endpoint style-scope yt-formatted-string";
 
@@ -223,11 +223,11 @@ const YTTV = function() {
     }
 
     /**
-     * Fetches an image from a URL and converts it to a data URL
+     * Fetches an image from a URL and converts it to a blob / data URL
      * @param {string} url
      * @returns {Promise<string>}
      */
-    function toDataURL(url)
+    function toBlobURL(url)
     {
         return new Promise(async (res) => {
             const fetched = await fetch(url);
