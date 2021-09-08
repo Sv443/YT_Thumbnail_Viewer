@@ -1,6 +1,12 @@
 # YouTube Thumbnail Viewer (YTTV)
 Userscript that allows you to view (and copy / download) a YouTube video's thumbnail easily from within its description
 
+<br>
+
+## Current Limitations:
+- Due to YouTube's wonky ass code, if you switch to another video without going back to the home / subscribed / explore page, you will need to reload the page so YTTV can re-grab the thumbnail, else it will just give you the thumbnail of the first video you've watched.  
+I don't know if there's a way I can fix this so just be aware that this happens.
+
 <br><br>
 
 ## Installation:
