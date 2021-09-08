@@ -4,8 +4,10 @@ Userscript that allows you to view (and copy / download) a YouTube video's thumb
 <br>
 
 ## Current Limitations:
-- Due to YouTube's wonky ass code, if you switch to another video without going back to the home / subscribed / explore page, you will need to reload the page so YTTV can re-grab the thumbnail, else it will just give you the thumbnail of the first video you've watched.  
+- Due to YouTube's wonky ass code, if you switch to another video without going back to the home / subscriptions / explore page, you will need to reload the page so YTTV can re-grab the thumbnail, else it will just give you the thumbnail of the first video you've watched.  
 I don't know if there's a way I can fix this so just be aware that this happens.
+- YouTube uses the WEBP format to store thumbnails on modern browsers, so the opened and downloaded thumbnails will usually also be in this format (old videos might still only have JPG or PNG).  
+There's nothing I can do to convert WEBP to PNG or JPG, so you will have to use a converter like [ezgif.com](https://ezgif.com/webp-to-png)
 
 <br><br>
 
